@@ -1,0 +1,37 @@
+{
+  "name": "patchup-action",
+  "version": "0.0.1",
+  "description": "A GitHub Action to keep your fork up to date and apply local patches on top of it",
+  "main": "index.js",
+  "scripts": {
+    "lint": "xo index.js",
+    "package": "ncc build index.js -o dist",
+    "test": "xo && jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/javascript-action.git"
+  },
+  "keywords": [
+    "GitHub",
+    "Actions",
+    "JavaScript",
+    "git",
+    "patch"
+  ],
+  "author": "Matt Bond",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/actions/javascript-action/issues"
+  },
+  "homepage": "https://github.com/actions/javascript-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.1.1",
+    "nodegit": "^0.26.5"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.22.1",
+    "jest": "^26.0.1",
+    "xo": "^0.30.0"
+  }
+}
