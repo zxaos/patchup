@@ -1,13 +1,30 @@
-name: 'Wait'
-description: 'Wait a designated number of milliseconds'
+---
+name: 'Patchup'
+description: 'Keep your fork up to date and apply your patches on top of it'
 inputs:
-  milliseconds:  # id of input
-    description: 'number of milliseconds to wait'
+  local_branch:
+    description: 'the local branch to keep in sync'
     required: true
-    default: '1000'
+    default: 'master'
+  upstream_repo:
+    required: true
+  upstream_branch:
+    required: true
+    default: 'master'
+  strategy:
+    description: 'how should the branch be kept up to date'
+    required: false
+    default: 'merge'
+  conflict_reviewers:
+    decription: 'request a review from these users if there is a conflict'
+    required: false
+    default: '[]'
+  target_tag:
+    description: 'the tag that denotes the start of your local patches'
+    required: false
 outputs:
-  time: # output will be available to future steps 
-    description: 'The message to output'
+  pull_request:
+    description: 'a pull request number if the run generated one'
 runs:
   using: 'node12'
   main: 'dist/index.js'
