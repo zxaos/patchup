@@ -9,8 +9,7 @@ inputs:
   upstream_repo:
     required: true
   upstream_branch:
-    required: true
-    default: 'master'
+    required: false
   strategy:
     description: 'how should the branch be kept up to date'
     required: false
