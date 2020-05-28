@@ -28,7 +28,7 @@
   "dependencies": {
     "@actions/core": "^1.1.1",
     "check-types": "^11.1.2",
-    "nodegit": "^0.26.5"
+    "simple-git": "^2.5.0"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.1",

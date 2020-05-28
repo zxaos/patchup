@@ -1,6 +1,5 @@
 /* eslint-env jest */
 const wait = require('./wait');
-const config = require('config');
 const cp = require('child_process');
 const path = require('path');
 
@@ -18,7 +17,11 @@ test('wait 500 ms', async () => {
 
 // Shows how the runner will run a javascript action with env / stdout protocol
 test('test runs', () => {
-	config.env.INPUT_MILLISECONDS = 500;
+	const env = Object.create(process.env);
+	env.INPUT_LOCAL_BRANCH = 'master';
+	env.INPUT_UPSTREAM_REPO = 'upstream';
+	env.INPUT_UPSTREAM_BRANCH = 'master';
+	env.INPUT_STRATEGY = 'merge';
 	const ip = path.join(__dirname, 'index.js');
-	console.log(cp.execSync(`node ${ip}`).toString());
+	console.log(cp.execSync(`${process.execPath} ${ip}`, {env}).toString());
 });
