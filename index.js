@@ -12,12 +12,14 @@ async function run() {
 		const options = config.get();
 		console.log('running with config:');
 		console.log(options);
-		if (await rebaseOnto(options)) {
+		const rebase = await rebaseOnto(options);
+		if (rebase.success) {
+			// TODO:
 			// Untag old tag
 			// push
 		} else {
 			core.warning('automated rebase failed');
-			createConflictPR(config);
+			createConflictPR(config, rebase.message);
 		}
 	} catch (error) {
 		core.setFailed(error.message);
@@ -27,7 +29,10 @@ async function run() {
 async function rebaseOnto(config) {
 	console.log('Starting rebase...');
 	const repo = git(config.localPath);
-	let rebaseSucceeded = false;
+	const rebaseStatus = {
+		success: false,
+		message: ''
+	};
 
 	try {
 		await repo.checkout(config.localBranch);
@@ -49,22 +54,23 @@ async function rebaseOnto(config) {
 
 		await repo.tag(['-f', config.targetTag, firstRebasedCommit]);
 
-		rebaseSucceeded = true;
+		rebaseStatus.success = true;
 	} catch (error) {
 		if (error instanceof GitError) {
 			console.log('Failed to rebase:');
 			console.log(error.message);
 			console.log('--------');
-			rebaseSucceeded = false;
+			rebaseStatus.success = false;
+			rebaseStatus.message = error.message;
 		} else {
 			throw error;
 		}
 	}
 
-	return rebaseSucceeded;
+	return rebaseStatus;
 }
 
-async function createConflictPR(config) {
+async function createConflictPR(config, message) {
 	const token = core.getInput('repo-token');
 	const octokit = github.getOctokit(token);
 
@@ -76,7 +82,10 @@ async function createConflictPR(config) {
 		title: `Manual update required for upstream ${config.upstreamBranch}`,
 		head: config.upstreamGithub,
 		base: config.localBranch,
-		body: 'Patchup tried to rebase a local patch set onto upstream, but failed. Please manually resolve conflicts from these changes.'
+		body: 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
+				'Please manually resolve conflicts from these changes.\n' +
+				'The error was:\n' +
+				message
 	});
 
 	if (config.conflictReviewers.length > 0) {

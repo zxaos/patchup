@@ -144,7 +144,10 @@ test('local conflict', async () => {
 	expect(initialHeadSHA).toBe('ca60987df9c1e628587eafd6ef3ac55a8246a5ee');
 	expect(initialLogs.total).toBe(3);
 
-	return expect(patchup.rebaseOnto(testConfig)).resolves.toBe(false);
+	return expect(patchup.rebaseOnto(testConfig)).resolves.toMatchObject({
+		success: false,
+		message: expect.stringMatching(/.+/)
+	});
 });
 
 /* Upstream conflict
