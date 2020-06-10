@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "xo index.js",
     "package": "ncc build index.js -o dist",
-    "test": "xo && jest"
+    "test": "xo && jest",
+    "test-only": "jest"
   },
   "repository": {
     "type": "git",
@@ -27,12 +28,16 @@
   "homepage": "https://github.com/actions/javascript-action#readme",
   "dependencies": {
     "@actions/core": "^1.1.1",
+    "@actions/github": "^3.0.0",
     "check-types": "^11.1.2",
     "simple-git": "^2.5.0"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.1",
     "jest": "^26.0.1",
+    "recursive-copy": "^2.0.10",
+    "rimraf": "^3.0.2",
+    "tar-fs": "^2.1.0",
     "xo": "^0.30.0"
   }
 }

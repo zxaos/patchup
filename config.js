@@ -10,6 +10,7 @@ function retrieveParameters() {
 		process.env.GITHUB_WORKSPACE
 	);
 	const localBranch = core.getInput('local_branch', {required: true});
+	const upstreamGithub = core.getInput('upstream_github', {required: true});
 	const upstreamRemote = core.getInput('upstream_remote', {required: true});
 	const upstreamBranch = core.getInput('upstream_branch', {required: true});
 	const strategy = core.getInput('strategy', {required: true});
@@ -17,7 +18,7 @@ function retrieveParameters() {
 		core.getInput('conflict_reviewers', {required: false})
 	);
 	const targetTag = core.getInput('target_tag', {required: false});
-	return Object.freeze({localPath, localBranch, upstreamRemote, upstreamBranch, strategy, conflictReviewers, targetTag});
+	return Object.freeze({localPath, localBranch, upstreamGithub, upstreamRemote, upstreamBranch, strategy, conflictReviewers, targetTag});
 }
 
 function validateParameters(p) {
@@ -43,11 +44,15 @@ function splitCommaString(string) {
 	return [];
 }
 
-try {
-	config = retrieveParameters();
-	validateParameters(config);
-} catch (error) {
-	core.setFailed(error.message);
+function get() {
+	try {
+		config = retrieveParameters();
+		validateParameters(config);
+	} catch (error) {
+		core.setFailed(error.message);
+	}
+
+	return config;
 }
 
-module.exports = config;
+exports.get = get;

@@ -10,6 +10,9 @@ inputs:
     description: 'the local branch to keep in sync'
     required: false
     default: 'master'
+  upstream_github:
+    description: 'the upstream repo (for filing PRs) in the username:branch format'
+    required: true
   upstream_remote:
     description: 'the name of the remote providing the upstream branch'
     required: false
