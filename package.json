@@ -6,8 +6,9 @@
   "scripts": {
     "lint": "xo index.js",
     "package": "ncc build index.js -o dist",
+    "lint": "xo",
     "test": "xo && jest",
-    "test-only": "jest"
+    "test:nolint": "jest"
   },
   "repository": {
     "type": "git",

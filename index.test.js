@@ -10,8 +10,11 @@ const patchup = require('.');
 
 const TEST_REPO_PATH = './test-repos/test';
 
-beforeAll(() => {
-	return setupTestRepos();
+beforeAll(async () => {
+	return Promise.all([
+		optionallyExtractTar('local'),
+		optionallyExtractTar('upstream')
+	]);
 });
 
 beforeEach(async () => {
@@ -176,23 +179,20 @@ test('upstream conflict', async () => {
 	expect(finalLogs.total).toBe(6);
 });
 
-function optionallyExtractTar(name, done) {
-	if (fs.existsSync(`./test-repos/${name}`)) {
-		done();
-	} else {
-		fs.createReadStream(`./test-repos/${name}.tar`)
-			.pipe(tar.extract(`./test-repos/${name}/`))
-			.on('end', done);
-	}
+function optionallyExtractTar(name) {
+	return new Promise((resolve, reject) => {
+		if (fs.existsSync(`./test-repos/${name}`)) {
+			resolve();
+		} else {
+			const extract = tar.extract(`./test-repos/${name}/`);
+			extract.on('finish', resolve);
+			extract.on('error', err => reject(err));
+			const read = fs.createReadStream(`./test-repos/${name}.tar`);
+			read.pipe(extract);
+		}
+	});
 }
 
-async function setupTestRepos() {
-	const tarUnpack = promisify(optionallyExtractTar);
-	return Promise.all([
-		tarUnpack('local'),
-		tarUnpack('upstream')
-	]);
-}
 // Stub a full test with with env / stdout protocol
 /*
 test('test runs', () => {
