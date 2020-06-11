@@ -1,13 +1,10 @@
 /* eslint-env jest */
 const {promisify} = require('util');
-const path = require('path');
 const fs = require('fs');
 const tar = require('tar-fs');
 const rimraf = promisify(require('rimraf'));
 const cpr = require('recursive-copy');
-
 const git = require('simple-git/promise');
-const cp = require('child_process');
 
 const patchup = require('.');
 
@@ -20,17 +17,6 @@ beforeAll(() => {
 beforeEach(async () => {
 	await rimraf(TEST_REPO_PATH);
 	await cpr('./test-repos/local', TEST_REPO_PATH, {results: false});
-});
-
-// Shows how the runner will run a javascript action with env / stdout protocol
-test.skip('test runs', () => {
-	const env = Object.create(process.env);
-	env.INPUT_LOCAL_BRANCH = 'master';
-	env.INPUT_UPSTREAM_REPO = 'upstream';
-	env.INPUT_UPSTREAM_BRANCH = 'master';
-	env.INPUT_STRATEGY = 'merge';
-	const ip = path.join(__dirname, 'index.js');
-	console.log(cp.execSync(`${process.execPath} ${ip}`, {env}).toString());
 });
 
 /* Test cases:
@@ -207,3 +193,15 @@ async function setupTestRepos() {
 		tarUnpack('upstream')
 	]);
 }
+// Stub a full test with with env / stdout protocol
+/*
+test('test runs', () => {
+	const env = Object.create(process.env);
+	env.INPUT_LOCAL_BRANCH = 'master';
+	env.INPUT_UPSTREAM_REPO = 'upstream';
+	env.INPUT_UPSTREAM_BRANCH = 'master';
+	env.INPUT_STRATEGY = 'merge';
+	const ip = path.join(__dirname, 'index.js');
+	console.log(cp.execSync(`${process.execPath} ${ip}`, {env}).toString());
+});
+*/

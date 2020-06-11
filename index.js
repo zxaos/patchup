@@ -14,9 +14,7 @@ async function run() {
 		console.log(options);
 		const rebase = await rebaseOnto(options);
 		if (rebase.success) {
-			// TODO:
-			// Untag old tag
-			// push
+			await pushUpdated(options);
 		} else {
 			core.warning('automated rebase failed');
 			createConflictPR(config, rebase.message);
@@ -52,7 +50,13 @@ async function rebaseOnto(config) {
 		// result, this should throw when we try to get commit details.
 		console.log('Resetting tag to:', (await repo.show(firstRebasedCommit)).split('\n')[0]);
 
-		await repo.tag(['-f', config.targetTag, firstRebasedCommit]);
+		await repo.tag([
+			'-f',
+			'-m',
+			`Patchup-generated tag - start of floating patchset for ${config.localBranch}`,
+			config.targetTag,
+			firstRebasedCommit
+		]);
 
 		rebaseStatus.success = true;
 	} catch (error) {
@@ -96,6 +100,23 @@ async function createConflictPR(config, message) {
 			reviewers: config.conflictReviewers
 		});
 	}
+}
+
+async function pushUpdated(config) {
+	const repo = git(config.localPath);
+	await repo.raw(
+		[
+			'push',
+			'--delete',
+			config.upstreamRemote,
+			config.targetTag
+		]);
+
+	return repo.push(
+		'origin',
+		config.localBranch,
+		{'--follow-tags': null, '--force': null} // Note that despite the null, this is turning these options _on_
+	);
 }
 
 if (require.main === module) {
