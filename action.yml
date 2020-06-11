@@ -3,6 +3,9 @@ name: 'Patchup'
 description: 'Keep your fork up to date and apply your patches on top of it'
 
 inputs:
+  repo-token:
+    description: 'github token to be used to file PRs. Can be secrets.GITHUB_TOKEN'
+    required: true
   local_path:
     description: 'the path to the local repository on disk. Uses $GITHUB_WORKSPACE if unset.'
     required: false
