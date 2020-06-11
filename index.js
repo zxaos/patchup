@@ -27,6 +27,9 @@ async function run() {
 async function rebaseOnto(config) {
 	console.log('Starting rebase...');
 	const repo = git(config.localPath);
+	repo.addConfig('user.name', 'patchup[bot]');
+	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
+
 	const rebaseStatus = {
 		success: false,
 		message: ''
