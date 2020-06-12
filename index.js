@@ -25,6 +25,7 @@ async function run() {
 }
 
 async function rebaseOnto(config) {
+	console.log('setting up repo');
 	const repo = git(config.localPath);
 	repo.addConfig('user.name', 'patchup[bot]');
 	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
@@ -35,7 +36,9 @@ async function rebaseOnto(config) {
 	};
 
 	try {
+		console.log('checking out branch');
 		await repo.checkout(config.localBranch);
+		console.log('starting rebase');
 		const rebaseResult = await repo.rebase([
 			'--onto',
 			`${config.upstreamRemote}/${config.upstreamBranch}`,
