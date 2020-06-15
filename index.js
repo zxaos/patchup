@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 'use strict';
 
 const core = require('@actions/core');
@@ -8,16 +10,16 @@ const git = require('simple-git/promise');
 const GitError = require('simple-git/src/lib/git-error').GitError;
 
 async function run() {
-		const options = config.get();
-		console.log('running with config:');
-		console.log(options);
-		const rebase = await rebaseOnto(options);
-		if (rebase.success) {
-			await pushUpdated(options);
-		} else {
-			core.warning('automated rebase failed');
-			createConflictPR(config, rebase.message);
-		}
+	const options = config.get();
+	console.log('running with config:');
+	console.log(options);
+	const rebase = await rebaseOnto(options);
+	if (rebase.success) {
+		await pushUpdated(options);
+	} else {
+		core.warning('automated rebase failed');
+		createConflictPR(config, rebase.message);
+	}
 }
 
 async function rebaseOnto(config) {
@@ -121,13 +123,9 @@ async function pushUpdated(config) {
 }
 
 if (require.main === module) {
-	(async () => {
-		await run();
-		console.log(text);
-	})().catch(e => {
-		core.setFailed(e.message);
-	});
-	run();
+	run()
+		.then(() => process.exit(0))
+		.catch(error => core.setFailed(error.message));
 }
 
 module.exports = {rebaseOnto};
