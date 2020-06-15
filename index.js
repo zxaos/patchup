@@ -11,10 +11,13 @@ const GitError = require('simple-git/src/lib/git-error').GitError;
 
 async function run() {
 	const options = config.get();
+	console.log('why is this not updating???');
 	console.log('running with config:');
 	console.log(options);
+	console.log('starting rebase');
 	const rebase = await rebaseOnto(options);
 	if (rebase.success) {
+		console.log('rebase was successful');
 		await pushUpdated(options);
 	} else {
 		core.warning('automated rebase failed');
@@ -121,11 +124,20 @@ async function pushUpdated(config) {
 		{'--follow-tags': null, '--force': null} // Note that despite the null, this is turning these options _on_
 	);
 }
-
+console.log('main is');
+console.log(require.main);
+console.log('module is');
+console.log(module);
 if (require.main === module) {
 	run()
-		.then(() => process.exit(0))
-		.catch(error => core.setFailed(error.message));
+		.then(() => {
+			console.log('exiting with main success');
+			process.exit(0);
+		})
+		.catch(error => {
+			console.log('exiting with main failure');
+			core.setFailed(error.message);
+		});
 }
 
 module.exports = {rebaseOnto};
