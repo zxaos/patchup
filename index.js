@@ -21,7 +21,7 @@ async function run() {
 		await pushUpdated(options);
 	} else {
 		core.warning('automated rebase failed');
-		createConflictPR(config, rebase.message);
+		await createConflictPR(options, rebase.message);
 	}
 }
 
@@ -87,13 +87,27 @@ async function createConflictPR(config, message) {
 	const octokit = github.getOctokit(token);
 
 	// Idea: is there an existing PR? Don't create one to prevent spamming
+	console.log('creating pr with details:');
+	console.log({
+		owner: context.repo.owner,
+		repo: context.repo.repo,
+		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
+		head: config.upstreamGithub,
+		base: config.localBranch,
+		maintainer_can_modify: false, // eslint-disable-line camelcase
+		body: 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
+				'Please manually resolve conflicts from these changes.\n' +
+				'The error was:\n' +
+				message
+	});
 
 	const pr = await octokit.pulls.create({
 		owner: context.repo.owner,
 		repo: context.repo.repo,
-		title: `Manual update required for upstream ${config.upstreamBranch}`,
+		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
 		head: config.upstreamGithub,
 		base: config.localBranch,
+		maintainer_can_modify: false, // eslint-disable-line camelcase
 		body: 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
 				'Please manually resolve conflicts from these changes.\n' +
 				'The error was:\n' +
@@ -128,10 +142,6 @@ async function pushUpdated(config) {
 	);
 }
 
-console.log('main is');
-console.log(require.main);
-console.log('module is');
-console.log(module);
 if (require.main === module) {
 	run()
 		.then(() => {
