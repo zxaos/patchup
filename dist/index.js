@@ -3775,32 +3775,30 @@ async function createConflictPR(config, message) {
 
 	// Idea: is there an existing PR? Don't create one to prevent spamming
 	console.log('creating pr with details:');
-	console.log({
+	const prDetails = {
 		owner: context.repo.owner,
 		repo: context.repo.repo,
-		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
 		head: config.upstreamGithub,
 		base: config.localBranch,
 		maintainer_can_modify: false, // eslint-disable-line camelcase
-		body: 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
-				'Please manually resolve conflicts from these changes.\n' +
-				'The error was:\n' +
-				message
-	});
-
-	const pr = await octokit.pulls.create({
-		owner: context.repo.owner,
-		repo: context.repo.repo,
 		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
-		head: config.upstreamGithub,
-		base: config.localBranch,
-		maintainer_can_modify: false, // eslint-disable-line camelcase
 		body: 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
 				'Please manually resolve conflicts from these changes.\n' +
 				'The error was:\n' +
-				message
-	});
+				'```\n' +
+				message +
+				'```\n\n\n' +
+				'To attempt this rebase locally, run:\n' +
+				`\`git rebase --onto upstream/${config.upstreamBranch} ${config.targetTag}^\`\n` +
+				`then reset the tag \`${config.targetTag}\` to point to your first local commit.`
+	};
 
+	const pr = await octokit.pulls.create(prDetails);
+
+	console.log('PR creation results:');
+	console.log(pr);
+
+	console.log(`assigning conflict reviewers: ${config.conflictReviewers}`);
 	if (config.conflictReviewers.length > 0) {
 		octokit.pulls.requestReviewers({
 			owner: context.repo.owner,
