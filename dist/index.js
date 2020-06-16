@@ -3771,26 +3771,37 @@ async function rebaseOnto(config) {
 
 async function createConflictPR(config, message) {
 	const octokit = github.getOctokit(config.token);
-
-	// Idea: is there an existing PR? Don't create one to prevent spamming
 	const upstreamUser = config.upstreamRepo.split('/')[0];
+
 	const prDetails = {
 		owner: context.repo.owner,
 		repo: context.repo.repo,
 		head: `${upstreamUser}:${config.upstreamBranch}`,
-		base: config.localBranch,
-		maintainer_can_modify: false, // eslint-disable-line camelcase
-		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
-		body: 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
-				'Please manually resolve conflicts from these changes.\n' +
-				'The error was:\n' +
-				'```\n' +
-				message +
-				'```\n\n\n' +
-				'To attempt this rebase locally, run:\n' +
-				`\`git rebase --onto upstream/${config.upstreamBranch} ${config.targetTag}^\`\n` +
-				`then reset the tag \`${config.targetTag}\` to point to your first local commit.`
+		base: config.localBranch
 	};
+
+	const {data: existingPRs} = await octokit.pulls.list({
+		state: 'open',
+		...prDetails
+	});
+
+	console.log(existingPRs);
+	if (existingPRs.length > 0) {
+		core.warning('PR already exists, a new one will not be created');
+		return;
+	}
+
+	prDetails.maintainer_can_modify = false; // eslint-disable-line camelcase
+	prDetails.title = `Manual update required for upstream branch ${config.upstreamBranch}`;
+	prDetails.body = 'Patchup tried to rebase a local patch set onto upstream, but failed.\n' +
+			'Please manually resolve conflicts from these changes.\n' +
+			'The error was:\n' +
+			'```\n' +
+			message +
+			'```\n\n\n' +
+			'To attempt this rebase locally, run:\n' +
+			`\`git rebase --onto upstream/${config.upstreamBranch} ${config.targetTag}^\`\n` +
+			`then reset the tag \`${config.targetTag}\` to point to your first local commit.`;
 
 	const {data: {number: pr}} = await octokit.pulls.create(prDetails);
 	core.setOutput('pull_request', pr);
