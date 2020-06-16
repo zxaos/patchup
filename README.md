@@ -1,6 +1,6 @@
 
 <p align="center">
-  ![unit-tests](https://github.com/zxaos/patchup/workflows/unit-tests/badge.svg)
+  <a href="https://github.com/zxaos/patchup/actions"><img alt="patchup status" src="https://github.com/zxaos/patchup/workflows/unit-tests/badge.svg"></a>
 </p>
 
 # Patchup
