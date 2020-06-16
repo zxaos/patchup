@@ -31,20 +31,26 @@ async function rebaseOnto(config) {
 	repo.addConfig('user.name', 'patchup[bot]');
 	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
 
+	console.log('retrieving upstream commits');
+	// Add upstream
+	await repo.addRemote('upstream', config.upstreamRepoURL);
+	// Fetch upstream branch
+	await repo.fetch('upstream', config.upstreamBranch);
+	console.log('checking out branch');
+	await repo.checkout(config.localBranch);
+
 	const rebaseStatus = {
 		success: false,
 		message: ''
 	};
 
 	try {
-		console.log('checking out branch');
-		await repo.checkout(config.localBranch);
 		console.log('starting rebase');
 		const targetTagSHA = await repo.revparse(config.targetTag);
 		console.log(`patch start tag ${config.targetTag} is ${targetTagSHA}`);
 		const rebaseResult = await repo.rebase([
 			'--onto',
-			`${config.upstreamRemote}/${config.upstreamBranch}`,
+			`upstream/${config.upstreamBranch}`,
 			`${config.targetTag}^`, // Note trailing ^, we want tag parent
 			'--exec',
 			'git rev-parse HEAD'
@@ -83,15 +89,14 @@ async function rebaseOnto(config) {
 }
 
 async function createConflictPR(config, message) {
-	const token = core.getInput('repo-token');
-	const octokit = github.getOctokit(token);
+	const octokit = github.getOctokit(config.token);
 
 	// Idea: is there an existing PR? Don't create one to prevent spamming
-	console.log('creating pr with details:');
+	const upstreamUser = config.upstreamRepo.split('/')[0];
 	const prDetails = {
 		owner: context.repo.owner,
 		repo: context.repo.repo,
-		head: config.upstreamGithub,
+		head: `${upstreamUser}:${config.upstreamBranch}`,
 		base: config.localBranch,
 		maintainer_can_modify: false, // eslint-disable-line camelcase
 		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
