@@ -3682,7 +3682,6 @@ module.exports = require("os");
 "use strict";
 
 
-
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 const context = github.context;
@@ -3692,13 +3691,10 @@ const GitError = __webpack_require__(347).GitError;
 
 async function run() {
 	const options = config.get();
-	console.log('why is this not updating???');
-	console.log('running with config:');
-	console.log(options);
 	console.log('starting rebase');
 	const rebase = await rebaseOnto(options);
 	if (rebase.success) {
-		console.log('rebase was successful');
+		console.log('automated rebase succeeded');
 		await pushUpdated(options);
 	} else {
 		core.warning('automated rebase failed');
@@ -3707,17 +3703,12 @@ async function run() {
 }
 
 async function rebaseOnto(config) {
-	console.log('setting up repo');
 	const repo = git(config.localPath);
 	repo.addConfig('user.name', 'patchup[bot]');
 	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
 
-	console.log('retrieving upstream commits');
-	// Add upstream
 	await repo.addRemote('upstream', config.upstreamRepoURL);
-	// Fetch upstream branch
 	await repo.fetch('upstream', config.upstreamBranch);
-	console.log('checking out branch');
 	await repo.checkout(config.localBranch);
 
 	const rebaseStatus = {
@@ -3726,7 +3717,6 @@ async function rebaseOnto(config) {
 	};
 
 	try {
-		console.log('starting rebase');
 		const targetTagSHA = await repo.revparse(config.targetTag);
 		console.log(`patch start tag ${config.targetTag} is ${targetTagSHA}`);
 		const rebaseResult = await repo.rebase([
@@ -3737,13 +3727,11 @@ async function rebaseOnto(config) {
 			'git rev-parse HEAD'
 		]);
 
-		console.log('Successfully rebased');
-
 		const firstRebasedCommit = rebaseResult.split('\n')[0];
 
 		// This isn't just informative, if we can't parse the sha out of the rebase
 		// result, this should throw when we try to get commit details.
-		console.log('Resetting tag to:', (await repo.show(firstRebasedCommit)).split('\n')[0]);
+		console.log('resetting patch start tag to:', (await repo.show(firstRebasedCommit)).split('\n')[0]);
 
 		await repo.tag([
 			'-f',
@@ -3756,7 +3744,7 @@ async function rebaseOnto(config) {
 		rebaseStatus.success = true;
 	} catch (error) {
 		if (error instanceof GitError) {
-			console.log('Failed to rebase:');
+			console.log('failed to rebase:');
 			console.log(error.message);
 			console.log('--------');
 			rebaseStatus.success = false;
@@ -3785,9 +3773,8 @@ async function createConflictPR(config, message) {
 		...prDetails
 	});
 
-	console.log(existingPRs);
 	if (existingPRs.length > 0) {
-		core.warning('PR already exists, a new one will not be created');
+		core.warning(`PR ${existingPRs[0].number} already exists, a new one will not be created`);
 		return;
 	}
 
@@ -3807,7 +3794,7 @@ async function createConflictPR(config, message) {
 	core.setOutput('pull_request', pr);
 
 	if (config.conflictReviewers.length > 0) {
-		console.log(`assigning conflict reviewers: ${config.conflictReviewers}`);
+		console.log(`assigning PR conflict reviewers: ${config.conflictReviewers}`);
 		await octokit.pulls.requestReviewers({
 			owner: context.repo.owner,
 			repo: context.repo.repo,
@@ -3838,11 +3825,9 @@ async function pushUpdated(config) {
 if (require.main === require.cache[eval('__filename')]) {
 	run()
 		.then(() => {
-			console.log('exiting with main success');
 			process.exit(0);
 		})
 		.catch(error => {
-			console.log('exiting with main failure');
 			core.setFailed(error.message);
 		});
 }
