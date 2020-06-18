@@ -40,7 +40,7 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
       - name: rebase upstream
-        uses: zxaos/patchup@1.0.0
+        uses: zxaos/patchup@v1
         with:
           local_branch: trunk
           github_token: ${{ secrets.GITHUB_TOKEN }}
