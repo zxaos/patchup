@@ -37,9 +37,8 @@ test('multiple local commits', async () => {
 	const testConfig = {
 		localPath: TEST_REPO_PATH,
 		localBranch: 'multiple-local',
-		upstreamRemote: 'upstream',
+		upstreamRepoURL: '../upstream',
 		upstreamBranch: 'multiple-local',
-		strategy: 'rebaseOnto',
 		targetTag: 'test-multiple-local'
 	};
 
@@ -77,9 +76,8 @@ test('single local commit', async () => {
 	const testConfig = {
 		localPath: TEST_REPO_PATH,
 		localBranch: 'single-local',
-		upstreamRemote: 'upstream',
+		upstreamRepoURL: '../upstream',
 		upstreamBranch: 'single-local',
-		strategy: 'rebaseOnto',
 		targetTag: 'test-single-local'
 	};
 
@@ -117,9 +115,8 @@ test('local conflict', async () => {
 	const testConfig = {
 		localPath: TEST_REPO_PATH,
 		localBranch: 'local-conflict',
-		upstreamRemote: 'upstream',
+		upstreamRepoURL: '../upstream',
 		upstreamBranch: 'local-conflict',
-		strategy: 'rebaseOnto',
 		targetTag: 'test-local-conflict'
 	};
 
@@ -150,9 +147,8 @@ test('upstream conflict', async () => {
 	const testConfig = {
 		localPath: TEST_REPO_PATH,
 		localBranch: 'upstream-conflict',
-		upstreamRemote: 'upstream',
+		upstreamRepoURL: '../upstream',
 		upstreamBranch: 'upstream-conflict',
-		strategy: 'rebaseOnto',
 		targetTag: 'test-upstream-conflict'
 	};
 
@@ -193,14 +189,13 @@ function optionallyExtractTar(name) {
 	});
 }
 
-// Stub a full test with with env / stdout protocol
+// Stub full test with with env / stdout protocol
 /*
 test('test runs', () => {
 	const env = Object.create(process.env);
 	env.INPUT_LOCAL_BRANCH = 'master';
 	env.INPUT_UPSTREAM_REPO = 'upstream';
 	env.INPUT_UPSTREAM_BRANCH = 'master';
-	env.INPUT_STRATEGY = 'merge';
 	const ip = path.join(__dirname, 'index.js');
 	console.log(cp.execSync(`${process.execPath} ${ip}`, {env}).toString());
 });

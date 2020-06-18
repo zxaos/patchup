@@ -3,40 +3,33 @@ name: 'Patchup'
 description: 'Keep your fork up to date and apply your patches on top of it'
 
 inputs:
-  repo-token:
-    description: 'github token to be used to file PRs. Can be secrets.GITHUB_TOKEN'
-    required: true
-  local_path:
-    description: 'the path to the local repository on disk. Uses $GITHUB_WORKSPACE if unset.'
-    required: false
-  local_branch:
-    description: 'the local branch to keep in sync'
-    required: false
-    default: 'master'
-  upstream_github:
-    description: 'the upstream repo (for filing PRs) in the username:branch format'
-    required: true
-  upstream_remote:
-    description: 'the name of the remote providing the upstream branch'
-    required: false
-    default: 'upstream'
-  upstream_branch:
-    required: false
-  strategy:
-    description: 'how should the branch be kept up to date'
-    required: false
-    default: 'merge'
   conflict_reviewers:
-    decription: 'request a review from these users if there is a conflict'
+    decription: 'Request a review from these users if there is a conflict.'
     required: false
     default: '[]'
-  target_tag:
-    description: 'the tag that denotes the start of your local patches'
+  local_branch:
+    description: 'Local branch to keep in sync'
     required: false
+    default: 'trunk'
+  local_path:
+    description: 'The path to the local repository on disk. Uses $GITHUB_WORKSPACE if unset.'
+    required: false
+  github_token:
+    description: 'GitHub token used to file PRs. Can be secrets.GITHUB_TOKEN.'
+    required: true
+  upstream_repo:
+    description: 'The upstream repo (same fork network). e.g. someuser/somerepo'
+    required: true
+  upstream_branch:
+    description: 'The upstream branch with changes. Same as local_branch if unset.'
+    required: false
+  target_tag:
+    description: 'Tag that denotes the start of your local patches'
+    required: true
 
 outputs:
   pull_request:
-    description: 'a pull request number if the run generated one'
+    description: 'Pull request number if the run generated one'
 
 runs:
   using: 'node12'

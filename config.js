@@ -5,34 +5,28 @@ const path = require('path');
 let config = {};
 
 function retrieveParameters() {
+	const conflictReviewers = splitCommaString(
+		core.getInput('conflict_reviewers', {required: false})
+	);
+	const localBranch = core.getInput('local_branch', {required: false}) || 'trunk';
 	const localPath = path.resolve(
 		core.getInput('local_path', {required: false}) ||
 		process.env.GITHUB_WORKSPACE
 	);
-	const localBranch = core.getInput('local_branch', {required: true});
-	const upstreamGithub = core.getInput('upstream_github', {required: true});
-	const upstreamRemote = core.getInput('upstream_remote', {required: true});
-	const upstreamBranch = core.getInput('upstream_branch', {required: true});
-	const strategy = core.getInput('strategy', {required: true});
-	const conflictReviewers = splitCommaString(
-		core.getInput('conflict_reviewers', {required: false})
-	);
-	const targetTag = core.getInput('target_tag', {required: false});
-	return Object.freeze({localPath, localBranch, upstreamGithub, upstreamRemote, upstreamBranch, strategy, conflictReviewers, targetTag});
+	const targetTag = core.getInput('target_tag', {required: true});
+	const token = core.getInput('github_token', {required: true});
+	const upstreamBranch = core.getInput('upstream_branch', {required: false}) || localBranch;
+	const upstreamRepo = core.getInput('upstream_repo', {required: true});
+	const upstreamRepoURL = `https://github.com/${core.getInput('upstream_repo', {required: true})}`;
+	return Object.freeze({conflictReviewers, localBranch, localPath, targetTag, token, upstreamBranch, upstreamRepo, upstreamRepoURL});
 }
 
 function validateParameters(p) {
-	const validStrategies = ['merge', 'rebase', 'rebase_onto', 'reset'];
-	check.in(p.strategy, validStrategies);
-
-	// Target tag must be set if strategy is rebase_onto
-	if (p.strategy === 'rebase_onto') {
-		check.nonEmptyString(p.targetTag);
-	}
-
-	check.nonEmptyString(p.upstream);
 	check.nonEmptyString(p.localBranch);
+	check.nonEmptyString(p.targetTag);
+	check.nonEmptyString(p.token);
 	check.nonEmptyString(p.upstreamBranch);
+	check.match(p.upstreamRepo, /\w+\/\w+/);
 }
 
 function splitCommaString(string) {

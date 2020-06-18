@@ -2218,34 +2218,28 @@ const path = __webpack_require__(622);
 let config = {};
 
 function retrieveParameters() {
+	const conflictReviewers = splitCommaString(
+		core.getInput('conflict_reviewers', {required: false})
+	);
+	const localBranch = core.getInput('local_branch', {required: false}) || 'trunk';
 	const localPath = path.resolve(
 		core.getInput('local_path', {required: false}) ||
 		process.env.GITHUB_WORKSPACE
 	);
-	const localBranch = core.getInput('local_branch', {required: true});
-	const upstreamGithub = core.getInput('upstream_github', {required: true});
-	const upstreamRemote = core.getInput('upstream_remote', {required: true});
-	const upstreamBranch = core.getInput('upstream_branch', {required: true});
-	const strategy = core.getInput('strategy', {required: true});
-	const conflictReviewers = splitCommaString(
-		core.getInput('conflict_reviewers', {required: false})
-	);
-	const targetTag = core.getInput('target_tag', {required: false});
-	return Object.freeze({localPath, localBranch, upstreamGithub, upstreamRemote, upstreamBranch, strategy, conflictReviewers, targetTag});
+	const targetTag = core.getInput('target_tag', {required: true});
+	const token = core.getInput('github_token', {required: true});
+	const upstreamBranch = core.getInput('upstream_branch', {required: false}) || localBranch;
+	const upstreamRepo = core.getInput('upstream_repo', {required: true});
+	const upstreamRepoURL = `https://github.com/${core.getInput('upstream_repo', {required: true})}`;
+	return Object.freeze({conflictReviewers, localBranch, localPath, targetTag, token, upstreamBranch, upstreamRepo, upstreamRepoURL});
 }
 
 function validateParameters(p) {
-	const validStrategies = ['merge', 'rebase', 'rebase_onto', 'reset'];
-	check.in(p.strategy, validStrategies);
-
-	// Target tag must be set if strategy is rebase_onto
-	if (p.strategy === 'rebase_onto') {
-		check.nonEmptyString(p.targetTag);
-	}
-
-	check.nonEmptyString(p.upstream);
 	check.nonEmptyString(p.localBranch);
+	check.nonEmptyString(p.targetTag);
+	check.nonEmptyString(p.token);
 	check.nonEmptyString(p.upstreamBranch);
+	check.match(p.upstreamRepo, /\w+\/\w+/);
 }
 
 function splitCommaString(string) {
@@ -3718,20 +3712,26 @@ async function rebaseOnto(config) {
 	repo.addConfig('user.name', 'patchup[bot]');
 	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
 
+	console.log('retrieving upstream commits');
+	// Add upstream
+	await repo.addRemote('upstream', config.upstreamRepoURL);
+	// Fetch upstream branch
+	await repo.fetch('upstream', config.upstreamBranch);
+	console.log('checking out branch');
+	await repo.checkout(config.localBranch);
+
 	const rebaseStatus = {
 		success: false,
 		message: ''
 	};
 
 	try {
-		console.log('checking out branch');
-		await repo.checkout(config.localBranch);
 		console.log('starting rebase');
 		const targetTagSHA = await repo.revparse(config.targetTag);
 		console.log(`patch start tag ${config.targetTag} is ${targetTagSHA}`);
 		const rebaseResult = await repo.rebase([
 			'--onto',
-			`${config.upstreamRemote}/${config.upstreamBranch}`,
+			`upstream/${config.upstreamBranch}`,
 			`${config.targetTag}^`, // Note trailing ^, we want tag parent
 			'--exec',
 			'git rev-parse HEAD'
@@ -3770,15 +3770,14 @@ async function rebaseOnto(config) {
 }
 
 async function createConflictPR(config, message) {
-	const token = core.getInput('repo-token');
-	const octokit = github.getOctokit(token);
+	const octokit = github.getOctokit(config.token);
 
 	// Idea: is there an existing PR? Don't create one to prevent spamming
-	console.log('creating pr with details:');
+	const upstreamUser = config.upstreamRepo.split('/')[0];
 	const prDetails = {
 		owner: context.repo.owner,
 		repo: context.repo.repo,
-		head: config.upstreamGithub,
+		head: `${upstreamUser}:${config.upstreamBranch}`,
 		base: config.localBranch,
 		maintainer_can_modify: false, // eslint-disable-line camelcase
 		title: `Manual update required for upstream branch ${config.upstreamBranch}`,
