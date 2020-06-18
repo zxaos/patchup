@@ -3707,9 +3707,18 @@ async function rebaseOnto(config) {
 	repo.addConfig('user.name', 'patchup[bot]');
 	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
 
-	await repo.addRemote('upstream', config.upstreamRepoURL);
+	const remotes = await repo.getRemotes();
+	if (!remotes.some(a => a.name === 'upstream')) {
+		await repo.addRemote('upstream', config.upstreamRepoURL);
+	}
+
 	await repo.fetch('upstream', config.upstreamBranch);
-	await repo.checkout(`origin/${config.localBranch}`);
+
+	if (remotes.some(r => r.name === 'origin')) {
+		await repo.checkout(['--track', `origin/${config.localBranch}`]);
+	} else {
+		await repo.checkout(`${config.localBranch}`);
+	}
 
 	const rebaseStatus = {
 		success: false,
