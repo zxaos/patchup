@@ -28,7 +28,7 @@ async function rebaseOnto(config) {
 
 	await repo.addRemote('upstream', config.upstreamRepoURL);
 	await repo.fetch('upstream', config.upstreamBranch);
-	await repo.checkout(config.localBranch);
+	await repo.checkout(`origin/${config.localBranch}`);
 
 	const rebaseStatus = {
 		success: false,
