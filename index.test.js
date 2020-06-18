@@ -131,7 +131,7 @@ test('local conflict', async () => {
 	expect(initialLogs.total).toBe(3);
 
 	return expect(patchup.rebaseOnto(testConfig)).resolves.toMatchObject({
-		success: false,
+		status: 'failure',
 		message: expect.stringMatching(/.+/)
 	});
 });

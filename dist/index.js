@@ -3693,16 +3693,29 @@ async function run() {
 	const options = config.get();
 	console.log('starting rebase');
 	const rebase = await rebaseOnto(options);
-	if (rebase.success) {
-		console.log('automated rebase succeeded');
-		await pushUpdated(options);
-	} else {
-		core.warning('automated rebase failed');
-		await createConflictPR(options, rebase.message);
+	switch (rebase.status) {
+		case 'success':
+			console.log('automated rebase succeeded');
+			await pushUpdated(options);
+			break;
+		case 'failure':
+			core.warning('automated rebase failed');
+			await createConflictPR(options, rebase.message);
+			break;
+		case 'noop':
+			console.log('no upstream changes, skipping');
+			break;
+		default:
+			throw new Error('an unknow issue occurred during rebase');
 	}
 }
 
 async function rebaseOnto(config) {
+	const rebaseResult = {
+		status: 'unknown',
+		message: ''
+	};
+
 	const repo = git(config.localPath);
 	repo.addConfig('user.name', 'patchup[bot]');
 	repo.addConfig('user.email', 'github-action@users.noreply.github.com');
@@ -3720,50 +3733,54 @@ async function rebaseOnto(config) {
 		await repo.checkout(`${config.localBranch}`);
 	}
 
-	const rebaseStatus = {
-		success: false,
-		message: ''
-	};
+	const [localUpstreamCommit, remoteUpstreamCommit] = await Promise.all([
+		repo.revparse([`${config.targetTag}^`]),
+		repo.revparse([`upstream/${config.upstreamBranch}`])
+	]);
 
-	try {
-		const targetTagSHA = await repo.revparse(config.targetTag);
-		console.log(`patch start tag ${config.targetTag} is ${targetTagSHA}`);
-		const rebaseResult = await repo.rebase([
-			'--onto',
-			`upstream/${config.upstreamBranch}`,
-			`${config.targetTag}^`, // Note trailing ^, we want tag parent
-			'--exec',
-			'git rev-parse HEAD'
-		]);
+	if (localUpstreamCommit === remoteUpstreamCommit) {
+		rebaseResult.status = 'noop';
+	} else {
+		try {
+			const targetTagSHA = await repo.revparse(config.targetTag);
+			console.log(`patch start tag ${config.targetTag} is ${targetTagSHA}`);
+			const rebasedCommits = await repo.rebase([
+				'--onto',
+				`upstream/${config.upstreamBranch}`,
+				`${config.targetTag}^`, // Note trailing ^, we want tag parent
+				'--exec',
+				'git rev-parse HEAD'
+			]);
 
-		const firstRebasedCommit = rebaseResult.split('\n')[0];
+			const firstRebasedCommit = rebasedCommits.split('\n')[0];
 
-		// This isn't just informative, if we can't parse the sha out of the rebase
-		// result, this should throw when we try to get commit details.
-		console.log('resetting patch start tag to:', (await repo.show(firstRebasedCommit)).split('\n')[0]);
+			// This isn't just informative, if we can't parse the sha out of the rebase
+			// result, this should throw when we try to get commit details.
+			console.log('resetting patch start tag to:', (await repo.show(firstRebasedCommit)).split('\n')[0]);
 
-		await repo.tag([
-			'-f',
-			'-m',
-			`Patchup-generated tag - start of floating patchset for ${config.localBranch}`,
-			config.targetTag,
-			firstRebasedCommit
-		]);
+			await repo.tag([
+				'-f',
+				'-m',
+				`Patchup-generated tag - start of floating patchset for ${config.localBranch}`,
+				config.targetTag,
+				firstRebasedCommit
+			]);
 
-		rebaseStatus.success = true;
-	} catch (error) {
-		if (error instanceof GitError) {
-			console.log('failed to rebase:');
-			console.log(error.message);
-			console.log('--------');
-			rebaseStatus.success = false;
-			rebaseStatus.message = error.message;
-		} else {
-			throw error;
+			rebaseResult.status = 'success';
+		} catch (error) {
+			if (error instanceof GitError) {
+				console.log('failed to rebase:');
+				console.log(error.message);
+				console.log('--------');
+				rebaseResult.status = 'failure';
+				rebaseResult.message = error.message;
+			} else {
+				throw error;
+			}
 		}
 	}
 
-	return rebaseStatus;
+	return rebaseResult;
 }
 
 async function createConflictPR(config, message) {
