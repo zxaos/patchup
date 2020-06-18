@@ -1,114 +1,49 @@
 
 <p align="center">
-  <a href="https://github.com/actions/javascript-action/actions"><img alt="javscript-action status" src="https://github.com/actions/javascript-action/workflows/units-test/badge.svg"></a>
+  ![unit-tests](https://github.com/zxaos/patchup/workflows/unit-tests/badge.svg)
 </p>
 
-# Create a JavaScript Action
+# Patchup
 
-Use this template to bootstrap the creation of a JavaScript action.:rocket:
+This action provides a way to keep a floating set of patches on top of an upstream fork.
 
-This template includes tests, linting, a validation workflow, publishing, and versioning guidance.  
+Each time it runs, it'll try to rebase your changes onto the upstream branch. If it can't do this without conflit, it'll open a PR so that you can perform the changes manually.
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+## Using this action
 
-## Create an action from this template
+Click the button in the `Use this GitHub Action with your project` banner at the top of the page.
 
-Click the `Use this Template` and provide the new repo details for your action
+Once installed, _you must ensure there is a local git repository checkout out before running this action_. See the configuration section below for an example.
 
-## Code in Master
+Finally, you must create a tag that identifies the start of your commits (and the end of the upstream commits). It's easiest if this is the commit that adds the action workflow file!
 
-Install the dependencies  
-```bash
-$ npm install
+## Configuring patchup
+The configuration of this action is via the workflow yaml file. A simple example workflow follow. Several other configuration options are available, see actions.yml for additional information.
+
 ```
+---
+name: Rebase Onto Upstream
 
-Run the tests :heavy_check_mark:  
-```bash
-$ npm test
+on:
+  repository_dispatch:
+    types:
+      - "on-demand-check"
 
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
+jobs:
+  follow-upstream:
+    name: Follow upstream repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: clone repo
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - name: rebase upstream
+        uses: zxaos/patchup@1.0.0
+        with:
+          local_branch: trunk
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_repo: "my-upstream-repo/trunk"
+          target_tag: my-patches-start-here
 ```
-
-## Change action.yml
-
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-const core = require('@actions/core');
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Package for distribution
-
-GitHub Actions will run the entry point from the action.yml. Packaging assembles the code into one file that can be checked in to Git, enabling fast and reliable execution and preventing the need to check in node_modules.
-
-Actions are run from GitHub repos.  Packaging the action will create a packaged action in the dist folder.
-
-Run package
-
-```bash
-npm run package
-```
-
-Since the packaged index.js is run from the dist folder.
-
-```bash
-git add dist
-```
-
-## Create a release branch
-
-Users shouldn't consume the action from master since that would be latest code and actions can break compatibility between major versions.
-
-Checkin to the v1 release branch
-
-```bash
-$ git checkout -b v1
-$ git commit -a -m "v1 release"
-```
-
-```bash
-$ git push origin v1
-```
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Usage
-
-You can now consume the action by referencing the v1 branch
-
-```yaml
-uses: actions/javascript-action@v1
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/javascript-action/actions) for runs of this action! :rocket:
