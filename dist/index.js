@@ -3841,10 +3841,14 @@ async function pushUpdated(config) {
 			config.targetTag
 		]);
 	console.log('pushing changes');
-	return repo.push(
+	await repo.push(
 		'origin',
 		config.localBranch,
-		{'--follow-tags': null, '--force': null} // Note that despite the null, this is turning these options _on_
+		{'--force': null} // Note that despite the null, this is turns the option _on_
+	);
+	return repo.push(
+		'origin',
+		config.targetTag
 	);
 }
 
