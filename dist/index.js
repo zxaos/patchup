@@ -3793,17 +3793,15 @@ async function createConflictPR(config, message) {
 				`then reset the tag \`${config.targetTag}\` to point to your first local commit.`
 	};
 
-	const pr = await octokit.pulls.create(prDetails);
+	const {data: {number: pr}} = await octokit.pulls.create(prDetails);
+	core.setOutput('pull_request', pr);
 
-	console.log('PR creation results:');
-	console.log(pr);
-
-	console.log(`assigning conflict reviewers: ${config.conflictReviewers}`);
 	if (config.conflictReviewers.length > 0) {
-		octokit.pulls.requestReviewers({
+		console.log(`assigning conflict reviewers: ${config.conflictReviewers}`);
+		await octokit.pulls.requestReviewers({
 			owner: context.repo.owner,
 			repo: context.repo.repo,
-			pull_number: pr.data.number, // eslint-disable-line camelcase
+			pull_number: pr, // eslint-disable-line camelcase
 			reviewers: config.conflictReviewers
 		});
 	}
