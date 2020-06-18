@@ -11,11 +11,12 @@ Each time it runs, it'll try to rebase your changes onto the upstream branch. If
 
 ## Using this action
 
-Click the button in the `Use this GitHub Action with your project` banner at the top of the page.
+Add a github workflow job with
+`uses: zxaos/patchup@v1` to your github workflow file, with configuration as detailed below.
 
 Once installed, _you must ensure there is a local git repository checkout out before running this action_. See the configuration section below for an example.
 
-Finally, you must create a tag that identifies the start of your commits (and the end of the upstream commits). It's easiest if this is the commit that adds the action workflow file!
+Finally, you must create a tag that identifies the start of your commits (and the end of the upstream commits). This can be an empty commit.
 
 ## Configuring patchup
 The configuration of this action is via the workflow yaml file. A simple example workflow follow. Several other configuration options are available, see actions.yml for additional information.
@@ -25,6 +26,8 @@ The configuration of this action is via the workflow yaml file. A simple example
 name: Rebase Onto Upstream
 
 on:
+  schedule:
+    - cron: '0 0,12 * * *'
   repository_dispatch:
     types:
       - "on-demand-check"
