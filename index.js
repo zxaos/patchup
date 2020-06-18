@@ -40,6 +40,8 @@ async function rebaseOnto(config) {
 		console.log('checking out branch');
 		await repo.checkout(config.localBranch);
 		console.log('starting rebase');
+		const targetTagSHA = await repo.revparse(config.targetTag);
+		console.log(`patch start tag ${config.targetTag} is ${targetTagSHA}`);
 		const rebaseResult = await repo.rebase([
 			'--onto',
 			`${config.upstreamRemote}/${config.upstreamBranch}`,
@@ -110,20 +112,22 @@ async function createConflictPR(config, message) {
 
 async function pushUpdated(config) {
 	const repo = git(config.localPath);
+	console.log('deleting previous target tag on remote');
 	await repo.raw(
 		[
 			'push',
 			'--delete',
-			config.upstreamRemote,
+			'origin',
 			config.targetTag
 		]);
-
+	console.log('pushing changes');
 	return repo.push(
 		'origin',
 		config.localBranch,
 		{'--follow-tags': null, '--force': null} // Note that despite the null, this is turning these options _on_
 	);
 }
+
 console.log('main is');
 console.log(require.main);
 console.log('module is');
