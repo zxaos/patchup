@@ -4,9 +4,8 @@
   "description": "A GitHub Action to keep your fork up to date and apply local patches on top of it",
   "main": "index.js",
   "scripts": {
-    "lint": "xo index.js",
-    "package": "ncc build index.js -o dist",
     "lint": "xo",
+    "package": "ncc build index.js -o dist",
     "test": "xo && jest",
     "test:nolint": "jest"
   },
@@ -35,10 +34,10 @@
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.1",
-    "jest": "^26.0.1",
+    "jest": "^26.4.2",
     "recursive-copy": "^2.0.10",
     "rimraf": "^3.0.2",
     "tar-fs": "^2.1.0",
-    "xo": "^0.30.0"
+    "xo": "^0.33.1"
   }
 }
