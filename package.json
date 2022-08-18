@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/actions/javascript-action#readme",
   "dependencies": {
-    "@actions/core": "^1.2.6",
+    "@actions/core": "^1.9.1",
     "@actions/github": "^3.0.0",
     "check-types": "^11.1.2",
     "simple-git": "^2.5.0"
