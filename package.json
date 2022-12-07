@@ -30,7 +30,7 @@
     "@actions/core": "^1.9.1",
     "@actions/github": "^3.0.0",
     "check-types": "^11.1.2",
-    "simple-git": "^2.5.0"
+    "simple-git": "^3.15.0"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.1",
